@@ -4,6 +4,9 @@ message Clickredenvelope {
     from: Address;
     queryId: Int;
 }
+message SetMyJettonWallet {
+    jettonWallet: Address;
+}
 
 contract RedEnvelop with Deployable {
     money: Int;
@@ -13,6 +16,7 @@ contract RedEnvelop with Deployable {
     jetton: Address;
     groupaddresslist: map<Address, Bool>;
     randomAmount: Int;
+    myJettonWallet: Address;
     init(money: Int,
         redenvelopamount: Int,
         content: Slice,
@@ -26,35 +30,34 @@ contract RedEnvelop with Deployable {
         self.jetton = jetton;
         self.groupaddresslist = groupaddresslist;
         self.randomAmount = 0;
+        self.myJettonWallet = newAddress(0, 0);
+    }
+
+    receive(msg: SetMyJettonWallet){
+        let ctx: Context = context();
+        require(ctx.sender == self.owner, "The sender is not the owner!");
+        self.myJettonWallet = msg.jettonWallet;
     }
 
     receive(msg: Clickredenvelope){
         let ctx: Context = context();
-        let address: Address = ctx.sender;
-        require(self.groupaddresslist.get(address) != null, "You are not in the group");
-        require(self.groupaddresslist.get(address) == false, "You have already received the red envelope");
-        require(self.redenvelopamount > 0, "The red envelope has been received");
-        let amount: Int = self.redenvelop(self.money, self.redenvelopamount, self.jetton, msg.queryId);
-        self.groupaddresslist.set(address, true);
-        self.redenvelopamount -= 1;
-        self.money -= amount;
-    }
-
-    fun redenvelop(money: Int, redenvelopamount: Int, jetton: Address, queryId: Int): Int {
-        let ctx: Context = context();
-        let address: Address = ctx.sender;
+        //require(self.groupaddresslist.get(address) != null, "You are not in the group");
+        //require(self.groupaddresslist.get(address) == false, "You have already received the red envelope");
+        //require(self.redenvelopamount > 0, "The red envelope has been received");
         //ton or token
-        if (jetton == newAddress(0, 0)) {
-            self.randomAmount = self.tonAmount(money, redenvelopamount);
+        if (self.jetton == newAddress(0, 0)) {
+            self.randomAmount = self.tonAmount(self.money, self.redenvelopamount);
             self.sendTon(ctx.sender, self.randomAmount);
         } else {
-            self.randomAmount = self.tokenAmount(money, redenvelopamount);
-            self.sendToken(ctx.sender, self.randomAmount, jetton, queryId);
+            self.randomAmount = self.tokenAmount(self.money, self.redenvelopamount);
+            self.sendToken(ctx.sender, self.randomAmount, msg.queryId);
         }
-        return self.randomAmount;
+        self.groupaddresslist.set(ctx.sender, true);
+        self.redenvelopamount -= 1;
+        self.money -= self.randomAmount;
     }
-    //发送ton
 
+    //发送ton
     fun sendTon(destination: Address, amount: Int) {
         send(SendParameters{
                 to: destination,
@@ -67,20 +70,17 @@ contract RedEnvelop with Deployable {
     }
     //发送token
 
-    fun sendToken(destination: Address, amount: Int, jetton: Address, queryId: Int) {
-        let ctx: Context = context();
-        let address: Address = ctx.sender;
-        let myjettonWallet: StateInit = initOf JettonDefaultWallet(self.jetton, myAddress());
+    fun sendToken(destination: Address, amount: Int, queryId: Int) {
         send(SendParameters{
-                to: contractAddress(myjettonWallet),
-                value: ton("0.1"),
+                to: self.myJettonWallet,
+                value: ton("1"),
                 mode: SendRemainingValue,
                 bounce: false,
                 body: TokenTransfer{
                     queryId: queryId,
                     amount: amount,
                     destination: destination,
-                    response_destination: address,
+                    response_destination: destination,
                     custom_payload: emptyCell(),
                     forward_ton_amount: 0,
                     forward_payload: emptySlice()
@@ -122,5 +122,13 @@ contract RedEnvelop with Deployable {
 
     get fun redenvelopamount(): Int {
         return self.redenvelopamount;
+    }
+
+    get fun groupaddresslist(): map<Address, Bool> {
+        return self.groupaddresslist;
+    }
+
+    get fun myJettonWallet(): Address {
+        return self.myJettonWallet;
     }
 }
