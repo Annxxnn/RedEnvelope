@@ -7,6 +7,9 @@ message Clickredenvelope {
 message SetMyJettonWallet {
     jettonWallet: Address;
 }
+message SendTon {
+    from: Address;
+}
 
 contract RedEnvelop with Deployable {
     money: Int;
@@ -15,22 +18,24 @@ contract RedEnvelop with Deployable {
     owner: Address;
     jetton: Address;
     groupaddresslist: map<Address, Bool>;
-    randomAmount: Int;
     myJettonWallet: Address;
+    redamount: map<Int, Int>;
+    min: Int;
     init(money: Int,
         redenvelopamount: Int,
         content: Slice,
         owner: Address,
         jetton: Address,
-        groupaddresslist: map<Address, Bool>){
+        groupaddresslist: map<Address, Bool>,minAmount: Int){
         self.money = money;
         self.redenvelopamount = redenvelopamount;
         self.content = content;
         self.owner = owner;
         self.jetton = jetton;
         self.groupaddresslist = groupaddresslist;
-        self.randomAmount = 0;
         self.myJettonWallet = newAddress(0, 0);
+        self.min = minAmount;
+        self.redamount = self.Amount(minAmount);
     }
 
     receive(msg: SetMyJettonWallet){
@@ -41,20 +46,29 @@ contract RedEnvelop with Deployable {
 
     receive(msg: Clickredenvelope){
         let ctx: Context = context();
-        //require(self.groupaddresslist.get(address) != null, "You are not in the group");
-        //require(self.groupaddresslist.get(address) == false, "You have already received the red envelope");
-        //require(self.redenvelopamount > 0, "The red envelope has been received");
+        require(self.groupaddresslist.get(ctx.sender) != null, "You are not in the group");
+        require(self.groupaddresslist.get(ctx.sender) == false, "You have already received the red envelope");
+        require(self.redenvelopamount > 0, "The red envelope has been received");
         //ton or token
         if (self.jetton == newAddress(0, 0)) {
-            self.randomAmount = self.tonAmount(self.money, self.redenvelopamount);
-            self.sendTon(ctx.sender, self.randomAmount);
+            self.sendTon(msg.from, self.redamount.get(msg.queryId)!!);
         } else {
-            self.randomAmount = self.tokenAmount(self.money, self.redenvelopamount);
-            self.sendToken(ctx.sender, self.randomAmount, msg.queryId);
+            self.sendToken(ctx.sender, self.redamount.get(msg.queryId)!!, msg.queryId);
         }
         self.groupaddresslist.set(ctx.sender, true);
+        self.money -= self.redamount.get(msg.queryId)!!;
         self.redenvelopamount -= 1;
-        self.money -= self.randomAmount;
+    }
+
+    receive(msg: SendTon){
+        let ctx: Context = context();
+        send(SendParameters{
+                to: ctx.sender,
+                value: 0,
+                mode: SendPayGasSeparately,
+                body: "send ton to the redenvelope contract successfully!".asComment()
+            }
+        );
     }
 
     //发送ton
@@ -63,7 +77,6 @@ contract RedEnvelop with Deployable {
                 to: destination,
                 value: amount,
                 mode: SendRemainingValue,
-                bounce: true,
                 body: "send red envelope of ton to the user successfully!".asComment()
             }
         );
@@ -80,7 +93,7 @@ contract RedEnvelop with Deployable {
                     queryId: queryId,
                     amount: amount,
                     destination: destination,
-                    response_destination: destination,
+                    response_destination: myAddress(),
                     custom_payload: emptyCell(),
                     forward_ton_amount: 0,
                     forward_payload: emptySlice()
@@ -89,31 +102,32 @@ contract RedEnvelop with Deployable {
         );
     }
 
-    fun tonAmount(money: Int, redenvelopamount: Int): Int {
+    fun Amount(minAmount: Int): map<Int, Int>{
         //二倍均值法
-        if (redenvelopamount == 1) {
-            return money;
+        let index : Int= 0;
+        if (self.redenvelopamount == 1) {
+            self.redamount.set(index, self.money);
+        } else {
+            let total: Int = self.money;
+            let redcount: Int = self.redenvelopamount;
+            let repeatcount: Int = self.redenvelopamount;
+            repeat(repeatcount - 1) {
+            let min: Int = minAmount;
+            let max: Int = total / redcount * 2;
+            let amount: Int = random(min, max);
+            self.redamount.set(index, amount);
+            index += 1;
+            total -= amount;
+            redcount -= 1;
+            }
+            self.redamount.set(index, total);
         }
-        let min: Int = ton("0.1");
-        let max: Int = money / redenvelopamount * 2;
-        let amount: Int = random(min, max);
-        return amount;
-    }
-
-    fun tokenAmount(money: Int, redenvelopamount: Int): Int {
-        //二倍均值法
-        if (redenvelopamount == 1) {
-            return money;
-        }
-        let min: Int = 1;
-        let max: Int = money / redenvelopamount * 2;
-        let amount: Int = random(min, max);
-        return amount;
+        return self.redamount;
     }
     //////////////////////////
 
-    get fun randomAmount(): Int {
-        return self.randomAmount;
+    get fun redamount(): map<Int, Int> {
+        return self.redamount;
     }
 
     get fun money(): Int {
@@ -130,5 +144,13 @@ contract RedEnvelop with Deployable {
 
     get fun myJettonWallet(): Address {
         return self.myJettonWallet;
+    }
+
+    get fun ZeroAddress(): Address {
+        return newAddress(0, 0);
+    }
+
+    get fun balance(): Int {
+        return myBalance();
     }
 }
