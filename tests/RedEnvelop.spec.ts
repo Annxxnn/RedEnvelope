@@ -29,115 +29,42 @@ describe('RedEnvelop', () => {
         user2 = await blockchain.treasury('user2');
         user3 = await blockchain.treasury('user3');
 
-        // // 部署token
-        // let toekncontent = buildOnchainMetadata(jettonParams);
-        // let max_supply = toNano(123456766689011);
+        // 部署token
+        let toekncontent = buildOnchainMetadata(jettonParams);
+        let max_supply = toNano(123456766689011);
 
-        // sampleJetton = blockchain.openContract(await SampleJetton.fromInit(deployer.address, toekncontent, max_supply));
+        sampleJetton = blockchain.openContract(await SampleJetton.fromInit(deployer.address, toekncontent, max_supply));
 
-        // const jettonDeployResult = await sampleJetton.send(
-        //     deployer.getSender(),
-        //     {
-        //         value: toNano('0.05'),
-        //     },
-        //     {
-        //         $$type: 'Deploy',
-        //         queryId: 0n,
-        //     }
-        // );
+        const jettonDeployResult = await sampleJetton.send(
+            deployer.getSender(),
+            {
+                value: toNano('0.05'),
+            },
+            {
+                $$type: 'Deploy',
+                queryId: 0n,
+            }
+        );
 
-        // expect(jettonDeployResult.transactions).toHaveTransaction({
-        //     from: deployer.address,
-        //     to: sampleJetton.address,
-        //     deploy: true,
-        //     success: true,
-        // });
-        // console.log("sampleJetton.address deploy", sampleJetton.address);
-        // //部署红包合约
-        // const contentStr = "test red envelope of token";
-        // const content = beginCell()
-        //     .storeStringTail(contentStr)
-        // const money = 7n;
-        // const redenvelopamount = 3n;
-        // const jetton = sampleJetton.address;
-        // let myDictionary = Dictionary.empty(Dictionary.Keys.Address(), Dictionary.Values.Bool()); // Use Dictionary.Keys.Address() to create the key type
-        // myDictionary.set(user1.address, false);
-        // myDictionary.set(user2.address, false);
-        // myDictionary.set(user3.address, false);
-        // redEnvelop = blockchain.openContract(await RedEnvelop.fromInit(
-        //     money,
-        //     redenvelopamount,
-        //     content.asCell(),
-        //     deployer.address,
-        //     jetton,
-        //     myDictionary// Convert Map to Dictionary
-        // ));
-
-        // const deployResult = await redEnvelop.send(
-        //     deployer.getSender(),
-        //     {
-        //         value: toNano('0.05'),
-        //     },
-        //     {
-        //         $$type: 'Deploy',
-        //         queryId: 0n,
-        //     }
-        // );
-
-        // expect(deployResult.transactions).toHaveTransaction({
-        //     from: deployer.address,
-        //     to: redEnvelop.address,
-        //     deploy: true,
-        //     success: true,
-        // });
-        // console.log("redEnvelop.address deploy", redEnvelop.address);
-        // //向红包合约mint token
-        // const mintResult = await sampleJetton.send(
-        //     deployer.getSender(),
-        //     {
-        //         value: toNano('0.1'),
-        //     },
-        //     {
-        //         $$type: 'Mint',
-        //         amount: 100n,
-        //         receiver: redEnvelop.address,
-        //     }
-        // );
-        // expect(mintResult.transactions).toHaveTransaction({
-        //     from: deployer.address,
-        //     to: sampleJetton.address,
-        //     success: true,
-        // });
-        // const mytokenWallet = blockchain.openContract(await JettonDefaultWallet.fromInit(sampleJetton.address, redEnvelop.address));
-        // console.log("mytokenWallet.address in ts", mytokenWallet.address);
-        // const tokenBalance = (await mytokenWallet.getGetWalletData()).balance;
-        // console.log("tokenBalance", tokenBalance);
-        // //设置jetton钱包地址
-        // const setJettonWalletResult = await redEnvelop.send(
-        //     deployer.getSender(),
-        //     {
-        //         value: toNano('0.05'),
-        //     },
-        //     {
-        //         $$type: 'SetMyJettonWallet',
-        //         jettonWallet: mytokenWallet.address,
-        //     }
-        // );
-        // const jettonWallet = await redEnvelop.getMyJettonWallet();
-        // console.log("jettonWallet in tact", jettonWallet);
-        //////////ton redenvelope///////////
+        expect(jettonDeployResult.transactions).toHaveTransaction({
+            from: deployer.address,
+            to: sampleJetton.address,
+            deploy: true,
+            success: true,
+        });
+        console.log("sampleJetton.address deploy", sampleJetton.address);
         //部署红包合约
-        const contentStr = "test red envelope of ton";
+        const contentStr = "test red envelope of token";
         const content = beginCell()
             .storeStringTail(contentStr)
-        const money = toNano(100);
-        const redenvelopamount = 1n;
-        const jetton = Address.parse("EQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAM9c");
+        const money = 70n;
+        const redenvelopamount = 3n;
+        const jetton = sampleJetton.address;
         let myDictionary = Dictionary.empty(Dictionary.Keys.Address(), Dictionary.Values.Bool()); // Use Dictionary.Keys.Address() to create the key type
         myDictionary.set(user1.address, false);
         myDictionary.set(user2.address, false);
         myDictionary.set(user3.address, false);
-        let min = toNano(1);
+        const min = 1n;
         redEnvelop = blockchain.openContract(await RedEnvelop.fromInit(
             money,
             redenvelopamount,
@@ -151,7 +78,7 @@ describe('RedEnvelop', () => {
         const deployResult = await redEnvelop.send(
             deployer.getSender(),
             {
-                value: toNano('1'),
+                value: toNano('0.05'),
             },
             {
                 $$type: 'Deploy',
@@ -165,6 +92,81 @@ describe('RedEnvelop', () => {
             deploy: true,
             success: true,
         });
+        console.log("redEnvelop.address deploy", redEnvelop.address);
+        //向红包合约mint token
+        const mintResult = await sampleJetton.send(
+            deployer.getSender(),
+            {
+                value: toNano('0.1'),
+            },
+            {
+                $$type: 'Mint',
+                amount: 100n,
+                receiver: redEnvelop.address,
+            }
+        );
+        expect(mintResult.transactions).toHaveTransaction({
+            from: deployer.address,
+            to: sampleJetton.address,
+            success: true,
+        });
+        const mytokenWallet = blockchain.openContract(await JettonDefaultWallet.fromInit(sampleJetton.address, redEnvelop.address));
+        console.log("mytokenWallet.address in ts", mytokenWallet.address);
+        const tokenBalance = (await mytokenWallet.getGetWalletData()).balance;
+        console.log("tokenBalance", tokenBalance);
+        //设置jetton钱包地址
+        const setJettonWalletResult = await redEnvelop.send(
+            deployer.getSender(),
+            {
+                value: toNano('0.05'),
+            },
+            {
+                $$type: 'SetMyJettonWallet',
+                jettonWallet: mytokenWallet.address,
+            }
+        );
+        const jettonWallet = await redEnvelop.getMyJettonWallet();
+        console.log("jettonWallet in tact", jettonWallet);
+        //////////ton redenvelope///////////
+        // //部署红包合约
+        // const contentStr = "test red envelope of ton";
+        // const content = beginCell()
+        //     .storeStringTail(contentStr)
+        // const money = toNano(100);
+        // const redenvelopamount = 3n;
+        // const jetton = Address.parse("EQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAM9c");
+        // let myDictionary = Dictionary.empty(Dictionary.Keys.Address(), Dictionary.Values.Bool()); // Use Dictionary.Keys.Address() to create the key type
+        // myDictionary.set(user1.address, false);
+        // myDictionary.set(user2.address, false);
+        // myDictionary.set(user3.address, false);
+        // let min = toNano(1);
+        // redEnvelop = blockchain.openContract(await RedEnvelop.fromInit(
+        //     money,
+        //     redenvelopamount,
+        //     content.asCell(),
+        //     deployer.address,
+        //     jetton,
+        //     myDictionary,// Convert Map to Dictionary
+        //     min
+        // ));
+
+        // const deployResult = await redEnvelop.send(
+        //     deployer.getSender(),
+        //     {
+        //         value: toNano('1'),
+        //     },
+        //     {
+        //         $$type: 'Deploy',
+        //         queryId: 0n,
+        //     }
+        // );
+
+        // expect(deployResult.transactions).toHaveTransaction({
+        //     from: deployer.address,
+        //     to: redEnvelop.address,
+        //     deploy: true,
+        //     success: true,
+        // });
         //向红包合约转ton
         const tonAmount = toNano(100);
         const sendResult = await redEnvelop.send(
@@ -193,9 +195,7 @@ describe('RedEnvelop', () => {
         const redAmount0 = redAmount.get(0n) || 0n;
         const redAmount1 = redAmount.get(1n) || 0n;
         const redAmount2 = redAmount.get(2n) || 0n;
-        const redAmount3 = redAmount.get(3n) || 0n;
-        const redAmount4 = redAmount.get(4n) || 0n;
-        const total = redAmount0 + redAmount1 + redAmount2 + redAmount3 + redAmount4;
+        const total = redAmount0 + redAmount1 + redAmount2;
         console.log("total", total);
         expect(total).toEqual(money);
     });
@@ -204,7 +204,7 @@ describe('RedEnvelop', () => {
         const zeroAddress = await redEnvelop.getZeroAddress();
         console.log("zeroAddress", zeroAddress);
     });
-    it.skip('should send success red envelope', async () => {
+    it('should send  red envelope of token', async () => {
         const moneyBefore = await redEnvelop.getMoney();
         const redenvelopamountBefore = await redEnvelop.getRedenvelopamount();
         console.log("moneyBefore", moneyBefore);
@@ -212,7 +212,7 @@ describe('RedEnvelop', () => {
         const sendResult = await redEnvelop.send(
             user1.getSender(),
             {
-                value: toNano('5000'),
+                value: toNano('0.3'),
             },
             {
                 $$type: 'Clickredenvelope',
@@ -220,22 +220,67 @@ describe('RedEnvelop', () => {
                 queryId: 0n,
             }
         );
-        // expect(sendResult.transactions).toHaveTransaction({
-        //     from: user1.address,
-        //     to: redEnvelop.address,
-        //     success: true,
-        // });
-
+        expect(sendResult.transactions).toHaveTransaction({
+            from: user1.address,
+            to: redEnvelop.address,
+            success: true,
+        });
+        const redAmount = await redEnvelop.getRedamount();
+        const redAmount0 = redAmount.get(0n) || 0n;
+        console.log("redAmount0", redAmount0);
         const moneyAfter = await redEnvelop.getMoney();
         const redenvelopamountAfter = await redEnvelop.getRedenvelopamount();
         const groupaddresslistAfter = await redEnvelop.getGroupaddresslist();
         console.log("moneyAfter", moneyAfter);
         console.log("redenvelopamountAfter", redenvelopamountAfter);
         console.log("groupaddresslistAfter", groupaddresslistAfter);
+        const sendResult1 = await redEnvelop.send(
+            user2.getSender(),
+            {
+                value: toNano('0.3'),
+            },
+            {
+                $$type: 'Clickredenvelope',
+                from: user2.address,
+                queryId: 1n,
+            }
+        );
+        const redAmount1 = redAmount.get(1n) || 0n;
+        console.log("redAmount1", redAmount1);
+        const moneyAfter1 = await redEnvelop.getMoney();
+        const redenvelopamountAfter1 = await redEnvelop.getRedenvelopamount();
+        const groupaddresslistAfter1 = await redEnvelop.getGroupaddresslist();
+        console.log("moneyAfter1", moneyAfter1);
+        console.log("redenvelopamountAfter1", redenvelopamountAfter1);
+        console.log("groupaddresslistAfter1", groupaddresslistAfter1);
+        const sendResult2 = await redEnvelop.send(
+            user3.getSender(),
+            {
+                value: toNano('0.3'),
+            },
+            {
+                $$type: 'Clickredenvelope',
+                from: user3.address,
+                queryId: 2n,
+            }
+        );
+        const redAmount2 = redAmount.get(2n) || 0n;
+        console.log("randomAmount2", redAmount2);
+        const moneyAfter2 = await redEnvelop.getMoney();
+        const redenvelopamountAfter2 = await redEnvelop.getRedenvelopamount();
+        const groupaddresslistAfter2 = await redEnvelop.getGroupaddresslist();
+        console.log("moneyAfter2", moneyAfter2);
+        console.log("redenvelopamountAfter2", redenvelopamountAfter2);
+        console.log("groupaddresslistAfter2", groupaddresslistAfter2);
+        console.log("total", redAmount0 + redAmount1 + redAmount2);
+        const mytokenWallet = blockchain.openContract(await JettonDefaultWallet.fromInit(sampleJetton.address, redEnvelop.address));
+        console.log("mytokenWallet.address in ts", mytokenWallet.address);
+        const tokenBalance = (await mytokenWallet.getGetWalletData()).balance;
+        console.log("tokenBalance after", tokenBalance);
         //expect(moneyAfter).toEqual(moneyBefore - randomAmount);
         //expect(redenvelopamountAfter).toEqual(redenvelopamountBefore - 1n);
     });
-    it('should send  red envelope of ton', async () => {
+    it.skip('should send  red envelope of ton', async () => {
         const moneyBefore = await redEnvelop.getMoney();
         const redenvelopamountBefore = await redEnvelop.getRedenvelopamount();
         console.log("moneyBefore", moneyBefore);
@@ -252,11 +297,11 @@ describe('RedEnvelop', () => {
             }
         );
         console.log("redenvelop balance", await redEnvelop.getBalance());
-        // expect(sendResult.transactions).toHaveTransaction({
-        //     from: user1.address,
-        //     to: redEnvelop.address,
-        //     success: true,
-        // });
+        expect(sendResult.transactions).toHaveTransaction({
+            from: user1.address,
+            to: redEnvelop.address,
+            success: true,
+        });
 
         const moneyAfter = await redEnvelop.getMoney();
         const redenvelopamountAfter = await redEnvelop.getRedenvelopamount();
@@ -268,49 +313,49 @@ describe('RedEnvelop', () => {
         console.log("redenvelopamountAfter", redenvelopamountAfter);
         console.log("groupaddresslistAfter", groupaddresslistAfter);
         expect(redAmount0).toEqual(moneyBefore - moneyAfter);
-        // expect(moneyAfter).toEqual(moneyBefore - randomAmount);
-        // expect(redenvelopamountAfter).toEqual(redenvelopamountBefore - 1n);
+        expect(moneyAfter).toEqual(moneyBefore - redAmount0);
+        expect(redenvelopamountAfter).toEqual(redenvelopamountBefore - 1n);
 
-        // const sendResult1 = await redEnvelop.send(
-        //     user2.getSender(),
-        //     {
-        //         value: toNano('0.3'),
-        //     },
-        //     {
-        //         $$type: 'Clickredenvelope',
-        //         from: user2.address,
-        //         queryId: 1n,
-        //     }
-        // );
-        // const randomAmount1 = await redEnvelop.getRandomAmount();
-        // console.log("randomAmount1", randomAmount1);
-        // const moneyAfter1 = await redEnvelop.getMoney();
-        // const redenvelopamountAfter1 = await redEnvelop.getRedenvelopamount();
-        // const groupaddresslistAfter1 = await redEnvelop.getGroupaddresslist();
-        // console.log("moneyAfter1", moneyAfter1);
-        // console.log("redenvelopamountAfter1", redenvelopamountAfter1);
-        // console.log("groupaddresslistAfter1", groupaddresslistAfter1);
-        // const sendResult2 = await redEnvelop.send(
-        //     user3.getSender(),
-        //     {
-        //         value: toNano('0.3'),
-        //     },
-        //     {
-        //         $$type: 'Clickredenvelope',
-        //         from: user3.address,
-        //         queryId: 2n,
-        //     }
-        // );
-        // const randomAmount2 = await redEnvelop.getRandomAmount();
-        // console.log("randomAmount2", randomAmount2);
-        // const moneyAfter2 = await redEnvelop.getMoney();
-        // const redenvelopamountAfter2 = await redEnvelop.getRedenvelopamount();
-        // const groupaddresslistAfter2 = await redEnvelop.getGroupaddresslist();
-        // console.log("moneyAfter2", moneyAfter2);
-        // console.log("redenvelopamountAfter2", redenvelopamountAfter2);
-        // console.log("groupaddresslistAfter2", groupaddresslistAfter2);
-
-        // console.log("total", randomAmount + randomAmount1 + randomAmount2);
+        const sendResult1 = await redEnvelop.send(
+            user2.getSender(),
+            {
+                value: toNano('0.3'),
+            },
+            {
+                $$type: 'Clickredenvelope',
+                from: user2.address,
+                queryId: 1n,
+            }
+        );
+        const redAmount1 = redamount.get(1n) || 0n;
+        console.log("redAmount1", redAmount1);
+        const moneyAfter1 = await redEnvelop.getMoney();
+        const redenvelopamountAfter1 = await redEnvelop.getRedenvelopamount();
+        const groupaddresslistAfter1 = await redEnvelop.getGroupaddresslist();
+        console.log("moneyAfter1", moneyAfter1);
+        console.log("redenvelopamountAfter1", redenvelopamountAfter1);
+        console.log("groupaddresslistAfter1", groupaddresslistAfter1);
+        const sendResult2 = await redEnvelop.send(
+            user3.getSender(),
+            {
+                value: toNano('0.3'),
+            },
+            {
+                $$type: 'Clickredenvelope',
+                from: user3.address,
+                queryId: 2n,
+            }
+        );
+        const redAmount2 = redamount.get(2n) || 0n;
+        console.log("randomAmount2", redAmount2);
+        const moneyAfter2 = await redEnvelop.getMoney();
+        const redenvelopamountAfter2 = await redEnvelop.getRedenvelopamount();
+        const groupaddresslistAfter2 = await redEnvelop.getGroupaddresslist();
+        console.log("moneyAfter2", moneyAfter2);
+        console.log("redenvelopamountAfter2", redenvelopamountAfter2);
+        console.log("groupaddresslistAfter2", groupaddresslistAfter2);
+        console.log("total", redAmount0 + redAmount1 + redAmount2);
+        console.log("redenvelope balance of ton", await redEnvelop.getBalance());
     });
 });
 

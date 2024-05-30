@@ -1,5 +1,6 @@
 import "@stdlib/deploy";
 import "./jetton";
+import "@stdlib/content";
 message Clickredenvelope {
     from: Address;
     queryId: Int;
@@ -10,7 +11,15 @@ message SetMyJettonWallet {
 message SendTon {
     from: Address;
 }
-
+message SendTonToUser{
+    to: Address;
+    amount: Int;
+}
+message SendTokenToUser{
+    to: Address;
+    amount: Int;
+    queryId: Int;
+}
 contract RedEnvelop with Deployable {
     money: Int;
     redenvelopamount: Int;
@@ -53,7 +62,7 @@ contract RedEnvelop with Deployable {
         if (self.jetton == newAddress(0, 0)) {
             self.sendTon(msg.from, self.redamount.get(msg.queryId)!!);
         } else {
-            self.sendToken(ctx.sender, self.redamount.get(msg.queryId)!!, msg.queryId);
+            self.sendJetton(ctx.sender, self.redamount.get(msg.queryId)!!, msg.queryId,ton("0.3"));
         }
         self.groupaddresslist.set(ctx.sender, true);
         self.money -= self.redamount.get(msg.queryId)!!;
@@ -76,32 +85,34 @@ contract RedEnvelop with Deployable {
         send(SendParameters{
                 to: destination,
                 value: amount,
-                mode: SendRemainingValue,
+                mode: 0,
+                bounce: false,
                 body: "send red envelope of ton to the user successfully!".asComment()
             }
         );
     }
     //发送token
+fun sendJetton(to: Address, amount: Int, queryId: Int,value: Int){
+        let ctx: Context = context();
+        require(amount > 0, "The amount of Jetton is not enough!");
+        require(to != newAddress(0, 0), "The address is not correct!");
 
-    fun sendToken(destination: Address, amount: Int, queryId: Int) {
         send(SendParameters{
-                to: self.myJettonWallet,
-                value: ton("1"),
-                mode: SendRemainingValue,
-                bounce: false,
-                body: TokenTransfer{
-                    queryId: queryId,
-                    amount: amount,
-                    destination: destination,
-                    response_destination: myAddress(),
-                    custom_payload: emptyCell(),
-                    forward_ton_amount: 0,
-                    forward_payload: emptySlice()
-                }.toCell()
-            }
-        );
+            to: self.myJettonWallet, 
+            value: ton("0.3")+value,
+            mode: SendRemainingValue, 
+            bounce: false,
+            body: TokenTransfer{
+                queryId: queryId,
+                amount: amount,
+                destination: to,
+                response_destination: myAddress(),
+                custom_payload: createOffchainContent("custom"),
+                forward_ton_amount: value,
+                forward_payload: createOffchainContent("forward").asSlice()
+            }.toCell()
+        });
     }
-
     fun Amount(minAmount: Int): map<Int, Int>{
         //二倍均值法
         let index : Int= 0;
@@ -123,6 +134,11 @@ contract RedEnvelop with Deployable {
             self.redamount.set(index, total);
         }
         return self.redamount;
+    }
+    fun createOffchainContent(pram: String): Cell {
+        let s:StringBuilder = beginStringFromBuilder(beginCell().storeBool(true).storeUint(0, 32));
+        s.append(pram);
+        return s.toCell();
     }
     //////////////////////////
 
