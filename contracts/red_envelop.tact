@@ -11,15 +11,6 @@ message SetMyJettonWallet {
 message SendTon {
     from: Address;
 }
-message SendTonToUser{
-    to: Address;
-    amount: Int;
-}
-message SendTokenToUser{
-    to: Address;
-    amount: Int;
-    queryId: Int;
-}
 contract RedEnvelop with Deployable {
     money: Int;
     redenvelopamount: Int;
