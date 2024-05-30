@@ -51,8 +51,7 @@ contract RedEnvelop with Deployable {
         require(self.groupaddresslist.get(ctx.sender) != null, "You are not in the group");
         require(self.groupaddresslist.get(ctx.sender) == false, "You have already received the red envelope");
         require(self.redenvelopamount > 0, "The red envelope has been received");
-        require(msg.queryId >= 0 && msg.queryId < self.redenvelopamount, "The queryId is not correct");
-        require(msg.from == newAddress(0,0), "The sender is not correct");
+        require(msg.from != newAddress(0,0), "The sender is not correct");
         //ton or token
         if (self.jetton == newAddress(0, 0)) {
             self.sendTon(msg.from, self.redamount.get(msg.queryId)!!);
