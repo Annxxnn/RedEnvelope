@@ -41,6 +41,8 @@ contract RedEnvelop with Deployable {
     receive(msg: SetMyJettonWallet){
         let ctx: Context = context();
         require(ctx.sender == self.owner, "The sender is not the owner!");
+        require(self.myJettonWallet == newAddress(0, 0), "The jetton wallet has been set!");
+        require(msg.jettonWallet != newAddress(0, 0), "The jetton wallet is not correct!");
         self.myJettonWallet = msg.jettonWallet;
     }
 
@@ -49,6 +51,8 @@ contract RedEnvelop with Deployable {
         require(self.groupaddresslist.get(ctx.sender) != null, "You are not in the group");
         require(self.groupaddresslist.get(ctx.sender) == false, "You have already received the red envelope");
         require(self.redenvelopamount > 0, "The red envelope has been received");
+        require(msg.queryId >= 0 && msg.queryId < self.redenvelopamount, "The queryId is not correct");
+        require(msg.from == newAddress(0,0), "The sender is not correct");
         //ton or token
         if (self.jetton == newAddress(0, 0)) {
             self.sendTon(msg.from, self.redamount.get(msg.queryId)!!);
@@ -62,6 +66,7 @@ contract RedEnvelop with Deployable {
 
     receive(msg: SendTon){
         let ctx: Context = context();
+        require(ctx.sender == self.owner, "The sender is not the owner!");
         send(SendParameters{
                 to: ctx.sender,
                 value: 0,
@@ -83,7 +88,7 @@ contract RedEnvelop with Deployable {
         );
     }
     //发送token
-fun sendJetton(to: Address, amount: Int, queryId: Int,value: Int){
+    fun sendJetton(to: Address, amount: Int, queryId: Int,value: Int){
         let ctx: Context = context();
         require(amount > 0, "The amount of Jetton is not enough!");
         require(to != newAddress(0, 0), "The address is not correct!");
