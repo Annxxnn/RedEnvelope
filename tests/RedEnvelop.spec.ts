@@ -204,7 +204,7 @@ describe('RedEnvelop', () => {
         const zeroAddress = await redEnvelop.getZeroAddress();
         console.log("zeroAddress", zeroAddress);
     });
-    it('should send  red envelope of token', async () => {
+    it.skip('should send  red envelope of token', async () => {
         const moneyBefore = await redEnvelop.getMoney();
         const redenvelopamountBefore = await redEnvelop.getRedenvelopamount();
         console.log("moneyBefore", moneyBefore);

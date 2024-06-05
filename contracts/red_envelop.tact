@@ -11,22 +11,24 @@ message SetMyJettonWallet {
 message SendTon {
     from: Address;
 }
-contract RedEnvelop with Deployable {
-    money: Int;
-    redenvelopamount: Int;
+contract RedEnvelop {
+    redAddress: Address;
+    money: Int;//红包总金额
+    redenvelopamount: Int;//红包个数
     content: Slice;
     owner: Address;
     jetton: Address;
     groupaddresslist: map<Address, Bool>;
     myJettonWallet: Address;
-    redamount: map<Int, Int>;
+    redamount: map<Int, Int>;//分配的红包金额
     min: Int;
-    init(money: Int,
+    init(redAddress: Address,money: Int,
         redenvelopamount: Int,
         content: Slice,
         owner: Address,
         jetton: Address,
         groupaddresslist: map<Address, Bool>,minAmount: Int){
+        self.redAddress = redAddress;
         self.money = money;
         self.redenvelopamount = redenvelopamount;
         self.content = content;
@@ -48,19 +50,28 @@ contract RedEnvelop with Deployable {
 
     receive(msg: Clickredenvelope){
         let ctx: Context = context();
+        let sendTonValue: Int = ctx.value+self.redamount.get(msg.queryId)!!;
         require(self.groupaddresslist.get(ctx.sender) != null, "You are not in the group");
         require(self.groupaddresslist.get(ctx.sender) == false, "You have already received the red envelope");
         require(self.redenvelopamount > 0, "The red envelope has been received");
         require(msg.from != newAddress(0,0), "The sender is not correct");
         //ton or token
         if (self.jetton == newAddress(0, 0)) {
-            self.sendTon(msg.from, self.redamount.get(msg.queryId)!!);
+            self.sendTon(msg.from, sendTonValue);
         } else {
             self.sendJetton(ctx.sender, self.redamount.get(msg.queryId)!!, msg.queryId,ton("0.3"));
         }
         self.groupaddresslist.set(ctx.sender, true);
         self.money -= self.redamount.get(msg.queryId)!!;
         self.redenvelopamount -= 1;
+        if (self.redenvelopamount == 0) {
+            send(SendParameters{
+                to: self.redAddress,
+                value: 0,
+                mode: SendPayGasSeparately,
+                body: "The red envelope has been received successfully!".asComment()
+            });
+        }
     }
 
     receive(msg: SendTon){
@@ -80,7 +91,7 @@ contract RedEnvelop with Deployable {
         send(SendParameters{
                 to: destination,
                 value: amount,
-                mode: 0,
+                mode: SendPayGasSeparately,
                 bounce: false,
                 body: "send red envelope of ton to the user successfully!".asComment()
             }
